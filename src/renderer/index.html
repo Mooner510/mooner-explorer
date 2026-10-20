@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob: mooner-preview:; connect-src 'self' mooner-preview:; media-src mooner-preview:; frame-src mooner-preview:; style-src 'self'; script-src 'self'">
+  <title>Mooner Explorer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="window">
+  <div class="app sidebar-collapsed">
+    <aside class="sidebar">
+      <div class="sidebar-brand"></div>
+      <div class="sidebar-heading">
+        <span>기기</span>
+        <button class="icon-button" id="refresh-devices" title="기기 목록 새로 고침" aria-label="기기 목록 새로 고침">⟳</button>
+      </div>
+      <ul class="device-list" id="device-list"></ul>
+      <div class="sidebar-footer">
+        <button class="button" id="open-connect">무선 연결</button>
+        <button class="button" id="open-settings">설정</button>
+        <div class="adb-status" id="adb-status"></div>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="header">
+        <div class="device-title" id="device-title"></div>
+        <nav class="tabs" id="tabs" role="tablist"></nav>
+      </header>
+      <section class="view" id="view"></section>
+    </main>
+    <button class="sidebar-handle" id="toggle-sidebar" title="기기 목록 접기/펼치기" aria-label="기기 목록 접기/펼치기" aria-expanded="false"><svg viewBox="2 1 5 8"><path d="M6 1.5L3 5l3 3.5"/></svg></button>
+  </div>
+  <div class="progress" id="progress" hidden></div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  </div>
+  <script src="icons.js"></script>
+  <script src="highlight.js"></script>
+  <script src="files.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
