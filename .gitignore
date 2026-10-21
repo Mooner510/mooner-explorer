@@ -1,0 +1,12 @@
+node_modules/
+dist/
+dist-main/
+out/
+release/
+*.log
+.DS_Store
+.idea/
+.vscode/
+*.part
+.env
+.env.*

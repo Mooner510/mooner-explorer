@@ -1,0 +1,17 @@
+{
+  "name": "mooner-explorer",
+  "productName": "Mooner Explorer",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Local Android device explorer over ADB",
+  "main": "dist-main/main.cjs",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build && esbuild src/main/main.ts --bundle --platform=node --format=cjs --external:electron --outfile=dist-main/main.cjs && esbuild src/main/preload.ts --bundle --platform=node --format=cjs --external:electron --outfile=dist-main/preload.cjs",
+    "desktop": "electron .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {"lucide-react":"0.468.0","react":"19.0.0","react-dom":"19.0.0"},
+  "devDependencies": {"@types/node":"22.13.5","@types/react":"19.0.12","@types/react-dom":"19.0.4","@vitejs/plugin-react":"4.3.4","electron":"35.0.0","esbuild":"0.25.0","typescript":"5.7.3","vite":"6.1.0"}
+}
