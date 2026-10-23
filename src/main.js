@@ -7,6 +7,7 @@ import qrcode from 'qrcode-generator';
 import { Adb, AdbError, findAdb, inputCommand, streamSize, wifiPairingPayload } from './adb.js';
 import { AppMetaStore } from './appmeta.js';
 import { ThumbnailStore } from './thumbs.js';
+import { checkForUpdate } from './updater.js';
 
 app.setName('Mooner Explorer');
 
@@ -513,6 +514,7 @@ app.whenReady().then(() => {
   setTimeout(() => thumbs.prune(256 * 1024 * 1024), 10_000);
   createWindow();
   if (devTools) watchSources();
+  setTimeout(() => checkForUpdate({ repo: 'Mooner510/mooner-explorer', asset: `mooner-explorer-win32-${process.arch}.zip`, window: mainWindow }).catch(error => console.warn(`업데이트 확인 실패: ${error.message}`)), 5000);
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
 });
 
