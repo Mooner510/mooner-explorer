@@ -7,6 +7,7 @@ import qrcode from 'qrcode-generator';
 import { Adb, AdbError, findAdb, inputCommand, streamSize, wifiPairingPayload } from './adb.js';
 import { AppMetaStore } from './appmeta.js';
 import { ThumbnailStore } from './thumbs.js';
+import { checkForUpdate } from './updater.js';
 
 app.setName('Mooner Explorer');
 
@@ -127,6 +128,19 @@ async function handlePreview(request) {
   }
 }
 
+// 기기에서 받은 파일에 인터넷 영역(Mark-of-the-Web)을 표시해, 실행할 때 Windows가 SmartScreen·보안 경고를 띄우게 한다.
+function markFromDevice(target) {
+  if (process.platform !== 'win32') return;
+  try {
+    if (fs.statSync(target).isDirectory()) {
+      for (const entry of fs.readdirSync(target)) markFromDevice(path.join(target, entry));
+    } else fs.writeFileSync(`${target}:Zone.Identifier`, '[ZoneTransfer]\r\nZoneId=3\r\n');
+  } catch { /* FAT·exFAT처럼 대체 데이터 스트림이 없는 드라이브 */ }
+}
+
+// 실행되거나 스크립트로 해석되는 형식은 PC에서 열기 전에 한 번 더 확인한다.
+const RUNNABLE = /\.(exe|com|scr|pif|bat|cmd|ps1|psm1|vbs|vbe|js|jse|wsf|wsh|hta|msi|msp|lnk|url|reg|cpl|jar|appref-ms)$/i;
+
 // PC 탐색기로 끌어내기: startDrag는 시작 시점에 실제 파일이 필요해서 기기 파일을 임시 폴더로 미리 받아 둔다.
 const exportRoot = () => path.join(app.getPath('temp'), 'mooner-explorer', 'export');
 const exportCache = new Map();
@@ -144,7 +158,9 @@ async function exportPath(serial, item) {
   const pulled = (async () => {
     fs.rmSync(folder, { recursive: true, force: true });
     fs.mkdirSync(folder, { recursive: true });
-    return (await adb.pull(serial, [remote], folder))[0];
+    const [file] = await adb.pull(serial, [remote], folder);
+    markFromDevice(file);
+    return file;
   })();
   exportCache.set(key, pulled);
   try { return await pulled; } catch (error) { exportCache.delete(key); throw error; }
@@ -219,13 +235,22 @@ const handlers = {
     const result = await dialog.showOpenDialog(windowOf(event), { title: '저장할 폴더 선택', properties: ['openDirectory', 'createDirectory'] });
     if (result.canceled) return null;
     const folder = result.filePaths[0];
-    await adb.pull(serialOf(serial), remotes, folder);
+    for (const file of await adb.pull(serialOf(serial), remotes, folder)) markFromDevice(file);
     return folder;
   },
-  async 'files:open'(_event, serial, remote) {
+  async 'files:open'(event, serial, remote) {
     const folder = path.join(app.getPath('temp'), 'mooner-explorer', serialOf(serial).replace(/[^\w.-]/g, '_'));
     fs.mkdirSync(folder, { recursive: true });
     const [file] = await adb.pull(serial, [remote], folder);
+    markFromDevice(file);
+    if (RUNNABLE.test(file)) {
+      const { response } = await dialog.showMessageBox(windowOf(event), {
+        type: 'warning', buttons: ['취소', '열기'], defaultId: 0, cancelId: 0, title: 'PC에서 열기',
+        message: `${path.basename(file)} 파일은 PC에서 프로그램으로 실행됩니다.`,
+        detail: '기기에 있던 파일을 실행하면 PC가 위험해질 수 있습니다. 출처를 믿을 수 있을 때만 여세요.',
+      });
+      if (response !== 1) return;
+    }
     const error = await shell.openPath(file);
     if (error) throw new AdbError(error);
   },
@@ -388,8 +413,6 @@ const handlers = {
     fs.writeFileSync(result.filePath, content);
     return result.filePath;
   },
-
-  'os:showFolder': (_event, folder) => shell.openPath(folder),
 };
 
 // Errors are returned as values so the renderer sees the message without Electron's "Error invoking remote method" prefix.
@@ -491,6 +514,7 @@ app.whenReady().then(() => {
   setTimeout(() => thumbs.prune(256 * 1024 * 1024), 10_000);
   createWindow();
   if (devTools) watchSources();
+  setTimeout(() => checkForUpdate({ repo: 'Mooner510/mooner-explorer', asset: `mooner-explorer-win32-${process.arch}.zip`, window: mainWindow }).catch(error => console.warn(`업데이트 확인 실패: ${error.message}`)), 5000);
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
 });
 

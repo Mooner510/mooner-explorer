@@ -50,3 +50,9 @@ tests/              node:test 단위 테스트
 - Windows용 `adb pull`은 한글 등 비ASCII 로컬 경로를 다루지 못합니다(폴더 이름이 잘리거나 저장 실패). 그래서 다운로드는 `adb exec-out cat`으로 받아 Node가 직접 쓰고, 업로드는 대상 이름을 항상 명시합니다. 수정 시각은 보존됩니다.
 - 셸 탭은 명령을 하나씩 실행하는 방식이라 `vi`, `top`처럼 화면을 계속 갱신하는 대화형 명령은 지원하지 않습니다.
 - 화면 탭은 스크린샷 기반이라 실시간 미러링이 아닙니다(최소 1초 간격).
+
+## 라이선스
+
+Copyright (C) 2026 mooner-explorer contributors.
+
+이 프로젝트는 **GNU General Public License version 3 only (`GPL-3.0-only`)**로 배포합니다. GPL v3 조건에 따라 사용·수정·재배포할 수 있으며, 어떠한 보증도 제공하지 않습니다. 전문은 [LICENSE](LICENSE)를 참고하세요. 포함된 아이콘([Atom Material Icons](src/renderer/icons/LICENSE-atom-material-icons.txt), MIT)과 폰트([Poppins](src/renderer/fonts/Poppins-OFL.txt), SIL OFL 1.1)에는 각 저작권자와 라이선스의 고지가 적용됩니다.
