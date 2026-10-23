@@ -22,9 +22,12 @@ export function parentRemote(dir) {
 }
 
 // Local file name for a remote path; characters Windows forbids are replaced.
+// Reserved device names (CON, NUL, COM1.txt …) would open the device instead of a file, so they get a "_" prefix.
 export function localName(remote) {
   const name = remote.replace(/\/+$/, '').split('/').pop() || 'root';
-  return process.platform === 'win32' ? name.replace(/[<>:"\\|?*\x00-\x1f]/g, '_').replace(/[. ]+$/, '_') : name;
+  if (process.platform !== 'win32') return name;
+  const safe = name.replace(/[<>:"\\|?*\x00-\x1f]/g, '_').replace(/[. ]+$/, '_');
+  return /^(con|prn|aux|nul|com[0-9¹²³]|lpt[0-9¹²³]|conin\$|conout\$)(\..*)?$/i.test(safe) ? `_${safe}` : safe;
 }
 
 // "a.txt" → "a - 복사본.txt" → "a - 복사본 (2).txt" …, the first name not in `taken`.

@@ -227,6 +227,10 @@ test('localName takes the last segment and keeps Korean names', () => {
   assert.equal(localName('/sdcard/한글 폴더/'), '한글 폴더');
   assert.equal(localName('/'), 'root');
   if (process.platform === 'win32') assert.equal(localName('/sdcard/a:b?.txt'), 'a_b_.txt');
+  if (process.platform === 'win32') {
+    for (const name of ['CON', 'nul', 'COM1', 'lpt9.txt', 'Aux.tar.gz']) assert.equal(localName(`/sdcard/${name}`), `_${name}`);
+    assert.equal(localName('/sdcard/console.txt'), 'console.txt');
+  }
 });
 
 test('Adb.push names targets explicitly and merges into existing folders', async () => {
