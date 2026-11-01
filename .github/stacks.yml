@@ -1,0 +1,9 @@
+version: 1
+components:
+  - name: explorer
+    type: node
+    path: .
+    node_version: 24.21.0
+    package_manager: pnpm
+services: []
+artifacts: []

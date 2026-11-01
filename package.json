@@ -8,6 +8,9 @@
   "type": "module",
   "main": "src/main.js",
   "packageManager": "pnpm@11.27.1",
+  "engines": {
+    "node": ">=24.21.0"
+  },
   "scripts": {
     "start": "electron .",
     "dev": "node scripts/dev.mjs",
