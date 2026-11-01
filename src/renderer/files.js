@@ -15,7 +15,7 @@ const FX_THUMB_VIEWS = new Set(['xlarge', 'large', 'medium']);
 const FX_THUMB_MAX_BYTES = 12 * 1024 * 1024;
 const FX_SORT_KEYS = [['name', '이름'], ['modified', '수정한 날짜'], ['type', '유형'], ['size', '크기']];
 const FX_PREVIEW_EXT = {
-  image: ['png', 'jpg', 'jpeg', 'jfif', 'gif', 'webp', 'bmp', 'svg', 'ico', 'avif'],
+  image: ['png', 'jpg', 'jpeg', 'jfif', 'gif', 'webp', 'bmp', 'svg', 'ico', 'avif', 'heic', 'heif', 'hif'],
   audio: ['mp3', 'm4a', 'aac', 'ogg', 'oga', 'opus', 'wav', 'flac', 'weba'],
   video: ['mp4', 'm4v', 'webm', 'mov', 'mkv'],
   pdf: ['pdf'],

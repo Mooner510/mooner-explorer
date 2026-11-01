@@ -6,6 +6,7 @@ import { Readable } from 'node:stream';
 import qrcode from 'qrcode-generator';
 import { Adb, AdbError, findAdb, inputCommand, streamSize, wifiPairingPayload } from './adb.js';
 import { AppMetaStore } from './appmeta.js';
+import { HEIC_EXT, heicToJpeg } from './heic.js';
 import { ThumbnailStore } from './thumbs.js';
 import { checkForUpdate } from './updater.js';
 
@@ -87,6 +88,20 @@ function releaseImageSlot() {
   if (next) next(); else imageSlots.free++;
 }
 
+const HEIC_MAX_BYTES = 80 * 1024 * 1024;
+
+// 자식 프로세스의 stdout을 끝까지 모은다. 요청이 취소되면 프로세스를 끊는다.
+function readAll(child, signal) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    const onAbort = () => { child.kill(); reject(new Error('aborted')); };
+    signal.addEventListener('abort', onAbort, { once: true });
+    child.on('error', reject);
+    child.stdout.on('data', chunk => chunks.push(chunk));
+    child.stdout.once('close', () => { signal.removeEventListener('abort', onAbort); resolve(Buffer.concat(chunks)); });
+  });
+}
+
 async function handlePreview(request) {
   let slot = false;
   const releaseSlot = () => { if (slot) { slot = false; releaseImageSlot(); } };
@@ -94,11 +109,18 @@ async function handlePreview(request) {
     const url = new URL(request.url);
     const [, serial, ...segments] = url.pathname.split('/').map(decodeURIComponent);
     const remote = `/${segments.join('/')}`;
-    const type = PREVIEW_MIME[remote.split('.').pop().toLowerCase()] ?? 'application/octet-stream';
+    const heic = HEIC_EXT.test(remote);
+    const type = heic ? 'image/jpeg' : PREVIEW_MIME[remote.split('.').pop().toLowerCase()] ?? 'application/octet-stream';
     if (type.startsWith('image/')) { await acquireImageSlot(request.signal); slot = true; }
     // 썸네일 요청은 목록에서 이미 아는 크기를 ?size=로 넘겨 stat용 adb 호출을 한 번 아낀다.
     const known = Number(url.searchParams.get('size'));
     const size = url.searchParams.has('size') && Number.isSafeInteger(known) && known >= 0 ? known : await adb.fileSize(serialOf(serial), remote);
+    if (heic) {
+      if (size > HEIC_MAX_BYTES) throw new Error('HEIC 파일이 너무 커서 미리볼 수 없습니다.');
+      const jpeg = await heicToJpeg(await readAll(adb.readRange(serialOf(serial), remote, 0, size), request.signal));
+      releaseSlot();
+      return new Response(jpeg, { headers: { 'Content-Type': type, 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' } });
+    }
     const headers = {
       'Content-Type': type,
       'Access-Control-Allow-Origin': '*',
@@ -168,7 +190,12 @@ async function exportPath(serial, item) {
 
 const thumbItem = item => ({ remote: String(item?.remote), size: Number(item?.size) || 0, modified: String(item?.modified ?? '') });
 
+const updateTarget = (manual = false) => ({ repo: 'Mooner510/mooner-explorer', asset: `mooner-explorer-win32-${process.arch}.zip`, window: mainWindow, manual });
+
 const handlers = {
+  'app:checkUpdate'() {
+    return checkForUpdate(updateTarget(true));
+  },
   'view:setDevMode'(_event, enabled) {
     settings.devMode = Boolean(enabled);
     saveSettings();
@@ -514,7 +541,10 @@ app.whenReady().then(() => {
   setTimeout(() => thumbs.prune(256 * 1024 * 1024), 10_000);
   createWindow();
   if (devTools) watchSources();
-  setTimeout(() => checkForUpdate({ repo: 'Mooner510/mooner-explorer', asset: `mooner-explorer-win32-${process.arch}.zip`, window: mainWindow }).catch(error => console.warn(`업데이트 확인 실패: ${error.message}`)), 5000);
+  // 실행 5초 뒤 한 번, 이후 며칠씩 켜 두는 경우를 위해 6시간마다 확인한다.
+  const backgroundUpdate = () => checkForUpdate(updateTarget()).catch(error => console.warn(`업데이트 확인 실패: ${error.message}`));
+  setTimeout(backgroundUpdate, 5000);
+  setInterval(backgroundUpdate, 6 * 60 * 60 * 1000).unref();
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
 });
 

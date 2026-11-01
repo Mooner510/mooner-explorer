@@ -1391,7 +1391,19 @@ async function openSettings() {
     h('div', { class: 'actions' }, h('button', {
       class: 'button',
       onclick: async () => { if (await attempt(() => api.call('adb:restart'), 'adb 서버를 재시작했습니다.') !== undefined) { lastDevicesJson = ''; refreshDevices(); } },
-    }, 'adb 서버 재시작')),
+    }, 'adb 서버 재시작'), h('button', {
+      class: 'button',
+      // 결과(최신 버전·새 버전 안내·실패)는 main 프로세스가 대화상자로 보여 준다.
+      onclick: async event => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        button.textContent = '확인 중…';
+        try { await api.call('app:checkUpdate'); }
+        catch (error) { toast(error.message, 'error'); }
+        finally { button.disabled = false; button.textContent = '업데이트 확인'; }
+      },
+    }, '업데이트 확인')),
+    h('p', { class: 'hint' }, '새 버전은 실행 5초 뒤와 이후 6시간마다 GitHub 최신 릴리스에서 자동으로 확인합니다.'),
   ], [
     { label: '닫기', value: null },
     {

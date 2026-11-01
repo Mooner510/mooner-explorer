@@ -1,0 +1,21 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      diff_base:
+        required: false
+        type: string
+        default: ''
+permissions:
+  contents: read
+jobs:
+  ci:
+    name: Checks
+    uses: Mooner510/workflows/.github/workflows/project-checks.yml@v1
+    with:
+      diff_base: ${{ inputs.diff_base || '' }}
+    secrets:
+      CI_PRIVATE_REPO_TOKEN: ${{ secrets.CI_PRIVATE_REPO_TOKEN }}
