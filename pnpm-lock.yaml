@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      libheif-js:
+        specifier: ^1.23.5
+        version: 1.23.5
       qrcode-generator:
         specifier: ^2.0.4
         version: 2.0.4
@@ -60,6 +63,10 @@ packages:
 
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
+
+  libheif-js@1.23.5:
+    resolution: {integrity: sha512-umXZPthnWZtF3iG/5mQG+AZ2V6i0UeYpo3z2CkggTEgL8dKmIIwJT6TDuAMuabXa1yTW8uJ1ZAgR+CxNTklYYw==}
+    engines: {node: '>=8.0.0'}
 
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
@@ -133,6 +140,8 @@ snapshots:
   env-paths@3.0.0: {}
 
   graceful-fs@4.2.11: {}
+
+  libheif-js@1.23.5: {}
 
   ms@2.1.3: {}
 
